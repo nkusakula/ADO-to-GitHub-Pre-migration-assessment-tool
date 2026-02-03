@@ -1,9 +1,11 @@
 # ADO Migration Readiness Analyzer 🔍
 
-A CLI tool that analyzes Azure DevOps organizations and generates comprehensive migration readiness reports for GitHub migrations.
+A CLI tool + Web UI that analyzes Azure DevOps organizations and generates comprehensive migration readiness reports for GitHub migrations, with the ability to **migrate repositories**.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+![Dashboard Screenshot](docs/dashboard.png)
 
 ## 🎯 Problem
 
@@ -17,26 +19,44 @@ Before migrating from Azure DevOps to GitHub, enterprises need to understand:
 
 ## ✨ Features
 
+### CLI
 - **📊 Organization Scan** - Discover all projects, repos, pipelines, and work items
 - **🔍 Compatibility Analysis** - Identify what maps to GitHub and what doesn't
 - **📈 Complexity Scoring** - Get Low/Medium/High ratings per asset type
-- **📋 Migration Roadmap** - Recommended order and effort estimates
-- **🚧 Blocker Detection** - Items requiring manual intervention
 - **📄 Rich Reports** - Console output, HTML, and JSON export
 
-## 🚀 Installation
+### Web UI (NEW!)
+- **🎨 Beautiful Dashboard** - Visual summary with charts
+- **⚙️ Configuration Wizard** - Easy setup for ADO and GitHub
+- **📊 Interactive Reports** - Expandable project details
+- **🚀 Repo Migration** - Select and migrate repos to GitHub with live progress
+
+## 🚀 Quick Start
+
+### Option 1: CLI Only
 
 ```bash
-pip install ado-readiness
-```
-
-Or install from source:
-
-```bash
-git clone https://github.com/nkusakula/ADO-to-GitHub-Pre-migration-assessment-tool.git
-cd ADO-to-GitHub-Pre-migration-assessment-tool
 pip install -e .
+ado-readiness configure
+ado-readiness scan
+ado-readiness report --format html -o report.html
 ```
+
+### Option 2: Web UI
+
+```bash
+# Terminal 1: Start backend
+cd backend
+pip install -e . && pip install -e ../
+uvicorn main:app --reload --port 8000
+
+# Terminal 2: Start frontend
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:5173 in your browser!
 
 ## 📖 Usage
 

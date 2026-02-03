@@ -290,6 +290,7 @@ async def scan_project_async(client: ADOClient, project_name: str) -> dict[str, 
             "total": sum(work_item_counts.values()),
             "by_type": work_item_counts,
             "custom_types": [t["name"] for t in work_item_types if t.get("isCustomType", False)],
+            "custom_fields": 0,  # Simplified - would need separate API call
         },
         "teams": {"count": len(teams)},
         "dependencies": {
@@ -386,7 +387,7 @@ async def run_migration(request: MigrateRequest):
                 continue
             
             # Execute migration using subprocess (gh gei)
-            success = await execute_gei_migration(
+            success, message = await execute_gei_migration(
                 ado_org=config.organization_url.split("/")[-1],
                 ado_project=repo_info["project"],
                 ado_repo=repo_name,
@@ -405,7 +406,7 @@ async def run_migration(request: MigrateRequest):
                 state.migration_progress["repos"][repo_name] = {
                     "status": "failed",
                     "progress": 0,
-                    "message": "Migration failed",
+                    "message": message[:100] if message else "Migration failed",
                 }
             
             await broadcast_progress({"type": "migration", **state.migration_progress})
@@ -428,33 +429,78 @@ async def execute_gei_migration(
     github_org: str,
     github_repo: str,
     visibility: str = "private",
-) -> bool:
-    """Execute GEI migration command."""
+) -> tuple[bool, str]:
+    """Execute GEI migration command using gh ado2gh."""
+    import os
     import subprocess
+    import sys
+    import yaml
     
-    # Build GEI command
+    # Get ADO PAT from config
+    config = get_config()
+    
+    # Get GitHub PAT from github config
+    github_pat = None
+    github_config_file = get_config_dir() / "github_config.yaml"
+    if github_config_file.exists():
+        with open(github_config_file) as f:
+            gh_config = yaml.safe_load(f)
+            github_pat = gh_config.get("token")
+    
+    if not github_pat:
+        return False, "GitHub PAT not configured. Go to Configure page and add your GitHub token."
+    
+    # Set environment variables for GEI
+    env = os.environ.copy()
+    env["GH_PAT"] = github_pat
+    
+    # Build the ado2gh command (correct syntax)
     cmd = [
-        "gh", "gei", "migrate-repo",
+        "gh", "ado2gh", "migrate-repo",
         "--ado-org", ado_org,
         "--ado-team-project", ado_project,
         "--ado-repo", ado_repo,
         "--github-org", github_org,
         "--github-repo", github_repo,
-        "--target-repo-visibility", visibility,
+        "--ado-pat", config.pat,
     ]
     
+    # Add visibility if not private (default is private)
+    if visibility and visibility != "private":
+        cmd.extend(["--target-repo-visibility", visibility])
+    
+    print(f"Running: {' '.join(cmd[:6])}... (PAT hidden)")
+    
     try:
-        process = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, stderr = await process.communicate()
+        # Use subprocess.run in a thread for Windows compatibility
+        import asyncio
+        loop = asyncio.get_event_loop()
         
-        return process.returncode == 0
+        def run_command():
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                env=env,
+                shell=(sys.platform == "win32"),  # Use shell on Windows
+            )
+            return result
+        
+        result = await loop.run_in_executor(None, run_command)
+        
+        print(f"Migration stdout: {result.stdout[:500] if result.stdout else 'None'}")
+        print(f"Migration stderr: {result.stderr[:500] if result.stderr else 'None'}")
+        print(f"Return code: {result.returncode}")
+        
+        if result.returncode == 0:
+            return True, "Success"
+        else:
+            error_msg = result.stderr or result.stdout or "Unknown error"
+            return False, error_msg[:200]
     except Exception as e:
-        print(f"Migration error: {e}")
-        return False
+        print(f"Migration exception: {e}")
+        return False, str(e)
+
 
 
 @app.get("/api/migrate/status")
