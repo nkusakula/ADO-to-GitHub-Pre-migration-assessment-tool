@@ -8,9 +8,17 @@ A CLI tool + Web UI that analyzes Azure DevOps organizations and generates compr
 
 ## 📸 Screenshots
 
-| Dashboard | Scan Progress | Migration |
-|-----------|---------------|-----------|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Scan](docs/screenshots/scan.png) | ![Migrate](docs/screenshots/migrate.png) |
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Scan Progress
+![Scan](docs/screenshots/scan2.png)
+
+### Migration
+![Migrate](docs/screenshots/migrate2.png)
+
+### Report
+![Report](docs/screenshots/report.png)
 
 ## 🎯 Problem
 
@@ -276,6 +284,4 @@ Contributions welcome! Please read our contributing guidelines first.
 - Uses [GitHub Enterprise Importer](https://docs.github.com/en/migrations) for migrations
 - UI powered by [React](https://react.dev/), [Vite](https://vitejs.dev/), and [TailwindCSS](https://tailwindcss.com/)
 
----
 
-Built for the **GitHub Copilot CLI Hackathon** 🚀
