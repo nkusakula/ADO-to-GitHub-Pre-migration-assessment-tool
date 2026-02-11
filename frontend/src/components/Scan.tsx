@@ -57,7 +57,7 @@ export default function Scan() {
           if (data.status === 'completed') {
             if (pollingRef.current) clearInterval(pollingRef.current);
             setScanning(false);
-            setTimeout(() => navigate('/'), 1000);
+            setTimeout(() => navigate('/dashboard'), 1000);
           } else if (data.status === 'failed' || (!data.in_progress && data.status !== 'starting')) {
             if (pollingRef.current) clearInterval(pollingRef.current);
             setScanning(false);

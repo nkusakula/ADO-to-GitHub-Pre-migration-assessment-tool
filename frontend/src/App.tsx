@@ -4,6 +4,7 @@ import {
   Search, GitBranch, FileCode, Settings, Home,
   ArrowRightLeft, BarChart3, CheckCircle2, AlertCircle
 } from 'lucide-react';
+import Landing from './components/Landing';
 import Dashboard from './components/Dashboard';
 import Configure from './components/Configure';
 import Scan from './components/Scan';
@@ -13,8 +14,12 @@ import Report from './components/Report';
 function Navigation() {
   const location = useLocation();
   
+  // Don't show nav on landing page
+  if (location.pathname === '/') return null;
+  
   const navItems = [
-    { path: '/', icon: Home, label: 'Dashboard' },
+    { path: '/', icon: Home, label: 'Home' },
+    { path: '/dashboard', icon: BarChart3, label: 'Dashboard' },
     { path: '/configure', icon: Settings, label: 'Configure' },
     { path: '/scan', icon: Search, label: 'Scan' },
     { path: '/migrate', icon: ArrowRightLeft, label: 'Migrate' },
@@ -62,9 +67,13 @@ function Navigation() {
 }
 
 function StatusBanner() {
+  const location = useLocation();
   const [status, setStatus] = useState<{configured: boolean; connected: boolean} | null>(null);
 
   useEffect(() => {
+    // Don't fetch on landing page
+    if (location.pathname === '/') return;
+    
     fetch('/api/config')
       .then(res => res.json())
       .then(data => {
@@ -76,7 +85,10 @@ function StatusBanner() {
         }
       })
       .catch(() => setStatus({ configured: false, connected: false }));
-  }, []);
+  }, [location.pathname]);
+
+  // Don't show banner on landing page
+  if (location.pathname === '/') return null;
 
   if (!status) return null;
 
@@ -114,15 +126,34 @@ function App() {
       <div className="min-h-screen bg-github-darker">
         <Navigation />
         <StatusBanner />
-        <main className="max-w-7xl mx-auto px-4 py-8">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/configure" element={<Configure />} />
-            <Route path="/scan" element={<Scan />} />
-            <Route path="/migrate" element={<Migrate />} />
-            <Route path="/report" element={<Report />} />
-          </Routes>
-        </main>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/dashboard" element={
+            <main className="max-w-7xl mx-auto px-4 py-8">
+              <Dashboard />
+            </main>
+          } />
+          <Route path="/configure" element={
+            <main className="max-w-7xl mx-auto px-4 py-8">
+              <Configure />
+            </main>
+          } />
+          <Route path="/scan" element={
+            <main className="max-w-7xl mx-auto px-4 py-8">
+              <Scan />
+            </main>
+          } />
+          <Route path="/migrate" element={
+            <main className="max-w-7xl mx-auto px-4 py-8">
+              <Migrate />
+            </main>
+          } />
+          <Route path="/report" element={
+            <main className="max-w-7xl mx-auto px-4 py-8">
+              <Report />
+            </main>
+          } />
+        </Routes>
       </div>
     </BrowserRouter>
   );
